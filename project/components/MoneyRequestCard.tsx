@@ -7,6 +7,8 @@ import { fonts } from '@/constants/fonts';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import { useUserStore } from '@/store/user-store';
 import { useFinanceStore } from '@/store/finance-store';
+import { useSettingsStore } from '@/store/settings-store';
+import { getTranslation } from '@/constants/localization';
 import { Check, X, Clock, MessageCircle } from 'lucide-react-native';
 
 interface MoneyRequestCardProps {
@@ -17,6 +19,9 @@ interface MoneyRequestCardProps {
 export const MoneyRequestCard = ({ request, onPress }: MoneyRequestCardProps) => {
   const { family } = useUserStore();
   const { updateRequestStatus } = useFinanceStore();
+  const { currency, language } = useSettingsStore();
+  
+  const t = (key: string) => getTranslation(key, language);
   
   const child = family?.members.find(m => m.id === request.childId);
   
@@ -48,15 +53,15 @@ export const MoneyRequestCard = ({ request, onPress }: MoneyRequestCardProps) =>
     >
       <View style={styles.header}>
         <View style={styles.amountContainer}>
-          <Text style={styles.amount}>{formatCurrency(request.amount)}</Text>
+          <Text style={styles.amount}>{formatCurrency(request.amount, currency)}</Text>
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{request.category}</Text>
+            <Text style={styles.categoryText}>{t(request.category)}</Text>
           </View>
         </View>
         <View style={styles.statusContainer}>
           {statusIcons[request.status]}
           <Text style={[styles.statusText, { color: statusColors[request.status] }]}>
-            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+            {t(request.status)}
           </Text>
         </View>
       </View>
@@ -71,7 +76,7 @@ export const MoneyRequestCard = ({ request, onPress }: MoneyRequestCardProps) =>
         </View>
       )}
       
-      <Text style={styles.date}>Requested on {formatDate(request.createdAt)}</Text>
+      <Text style={styles.date}>{t('requested')} {formatDate(request.createdAt, language === 'ru' ? 'ru-RU' : 'en-US')}</Text>
       
       {request.status === 'pending' && (
         <View style={styles.actionButtons}>
@@ -80,7 +85,7 @@ export const MoneyRequestCard = ({ request, onPress }: MoneyRequestCardProps) =>
             onPress={handleApprove}
           >
             <Check size={16} color="white" />
-            <Text style={styles.actionButtonText}>Approve</Text>
+            <Text style={styles.actionButtonText}>{t('approve')}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -88,7 +93,7 @@ export const MoneyRequestCard = ({ request, onPress }: MoneyRequestCardProps) =>
             onPress={handleReject}
           >
             <X size={16} color="white" />
-            <Text style={styles.actionButtonText}>Reject</Text>
+            <Text style={styles.actionButtonText}>{t('reject')}</Text>
           </TouchableOpacity>
         </View>
       )}

@@ -9,9 +9,9 @@ export const fonts = {
     xxxl: 32,
   },
   weights: {
-    regular: '400',
-    medium: '500',
-    semibold: '600',
-    bold: '700',
+    regular: "400",
+    medium: "500",
+    semibold: "600",
+    bold: "700",
   },
 };

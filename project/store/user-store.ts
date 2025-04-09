@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Family, User } from '@/types/user';
+import { Family, FamilyRule, User } from '@/types/user';
 import { mockFamily, mockUsers } from '@/mocks/users';
 
 interface UserState {
@@ -15,6 +15,12 @@ interface UserState {
   logout: () => void;
   switchUser: (userId: string) => void;
   updateUser: (user: Partial<User>) => void;
+  
+  // Family rule actions
+  addFamilyRule: (rule: Omit<FamilyRule, 'id'>) => void;
+  updateFamilyRule: (ruleId: string, updates: Partial<FamilyRule>) => void;
+  deleteFamilyRule: (ruleId: string) => void;
+  toggleFamilyRule: (ruleId: string, isActive: boolean) => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -74,6 +80,70 @@ export const useUserStore = create<UserState>()(
         set({ 
           currentUser: updatedUser,
           family: { ...family, members: updatedMembers }
+        });
+      },
+
+      // Family rule actions
+      addFamilyRule: (ruleData) => {
+        const { family } = get();
+        if (!family) return;
+
+        const newRule: FamilyRule = {
+          ...ruleData,
+          id: `rule${Date.now()}`,
+        };
+
+        set({
+          family: {
+            ...family,
+            rules: [...family.rules, newRule]
+          }
+        });
+      },
+
+      updateFamilyRule: (ruleId, updates) => {
+        const { family } = get();
+        if (!family) return;
+
+        const updatedRules = family.rules.map(rule => 
+          rule.id === ruleId ? { ...rule, ...updates } : rule
+        );
+
+        set({
+          family: {
+            ...family,
+            rules: updatedRules
+          }
+        });
+      },
+
+      deleteFamilyRule: (ruleId) => {
+        const { family } = get();
+        if (!family) return;
+
+        const filteredRules = family.rules.filter(rule => rule.id !== ruleId);
+
+        set({
+          family: {
+            ...family,
+            rules: filteredRules
+          }
+        });
+      },
+
+      toggleFamilyRule: (ruleId, isActive) => {
+        const { family } = get();
+        if (!family) return;
+
+        const updatedRules = family.rules.map(rule => 
+          rule.id === ruleId ? { ...rule, isActive } : rule
+        );
+
+        set({
+          family: {
+            ...family,
+            rules: updatedRules
+          }
         });
       }
     }),

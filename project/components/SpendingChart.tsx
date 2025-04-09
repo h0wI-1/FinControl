@@ -5,12 +5,17 @@ import { colors } from '@/constants/colors';
 import { layout } from '@/constants/layout';
 import { fonts } from '@/constants/fonts';
 import { formatCurrency } from '@/utils/formatters';
+import { useSettingsStore } from '@/store/settings-store';
+import { getTranslation } from '@/constants/localization';
 
 interface SpendingChartProps {
   stats: SpendingStats;
 }
 
 export const SpendingChart = ({ stats }: SpendingChartProps) => {
+  const { currency, language } = useSettingsStore();
+  const t = (key: string) => getTranslation(key, language);
+  
   const categoryColors: Record<CategoryType, string> = {
     food: '#FF9F1C',
     entertainment: '#E71D36',
@@ -28,7 +33,7 @@ export const SpendingChart = ({ stats }: SpendingChartProps) => {
   
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Spending by Category</Text>
+      <Text style={styles.title}>{t('spendingByCategory')}</Text>
       
       <View style={styles.barContainer}>
         <View style={styles.barChart}>
@@ -60,24 +65,24 @@ export const SpendingChart = ({ stats }: SpendingChartProps) => {
                   { backgroundColor: categoryColors[category as CategoryType] }
                 ]} 
               />
-              <Text style={styles.legendCategory}>{category}</Text>
+              <Text style={styles.legendCategory}>{t(category)}</Text>
             </View>
-            <Text style={styles.legendAmount}>{formatCurrency(amount)}</Text>
+            <Text style={styles.legendAmount}>{formatCurrency(amount, currency)}</Text>
           </View>
         ))}
       </View>
       
       <View style={styles.summaryContainer}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total Spent</Text>
-          <Text style={styles.summaryValue}>{formatCurrency(stats.totalSpent)}</Text>
+          <Text style={styles.summaryLabel}>{t('totalSpent')}</Text>
+          <Text style={styles.summaryValue}>{formatCurrency(stats.totalSpent, currency)}</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total Received</Text>
-          <Text style={styles.summaryValue}>{formatCurrency(stats.totalReceived)}</Text>
+          <Text style={styles.summaryLabel}>{t('totalReceived')}</Text>
+          <Text style={styles.summaryValue}>{formatCurrency(stats.totalReceived, currency)}</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Savings</Text>
+          <Text style={styles.summaryLabel}>{t('savings')}</Text>
           <Text style={styles.summaryValue}>{stats.savingsPercentage}%</Text>
         </View>
       </View>

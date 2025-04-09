@@ -5,6 +5,8 @@ import { colors } from '@/constants/colors';
 import { layout } from '@/constants/layout';
 import { fonts } from '@/constants/fonts';
 import { formatDate, formatCurrency } from '@/utils/formatters';
+import { useSettingsStore } from '@/store/settings-store';
+import { getTranslation } from '@/constants/localization';
 import { ArrowDownLeft, ArrowUpRight, ShoppingBag, Book, Utensils, Shirt, PiggyBank, Package } from 'lucide-react-native';
 
 interface TransactionCardProps {
@@ -12,6 +14,9 @@ interface TransactionCardProps {
 }
 
 export const TransactionCard = ({ transaction }: TransactionCardProps) => {
+  const { currency, language } = useSettingsStore();
+  const t = (key: string) => getTranslation(key, language);
+  
   const isIncome = transaction.type === 'income';
   
   const getCategoryIcon = () => {
@@ -39,8 +44,8 @@ export const TransactionCard = ({ transaction }: TransactionCardProps) => {
       
       <View style={styles.detailsContainer}>
         <Text style={styles.description}>{transaction.description}</Text>
-        <Text style={styles.category}>{transaction.category}</Text>
-        <Text style={styles.date}>{formatDate(transaction.date)}</Text>
+        <Text style={styles.category}>{t(transaction.category)}</Text>
+        <Text style={styles.date}>{formatDate(transaction.date, language === 'ru' ? 'ru-RU' : 'en-US')}</Text>
       </View>
       
       <View style={styles.amountContainer}>
@@ -56,7 +61,7 @@ export const TransactionCard = ({ transaction }: TransactionCardProps) => {
               { color: isIncome ? colors.success : colors.danger }
             ]}
           >
-            {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+            {isIncome ? '+' : '-'}{formatCurrency(transaction.amount, currency)}
           </Text>
         </View>
       </View>

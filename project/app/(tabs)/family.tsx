@@ -1,44 +1,61 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserStore } from "@/store/user-store";
 import { colors } from "@/constants/colors";
 import { layout } from "@/constants/layout";
 import { fonts } from "@/constants/fonts";
 import { FamilyRuleCard } from "@/components/FamilyRuleCard";
+import { FamilyRuleForm } from "@/components/FamilyRuleForm";
 import { FamilyRule } from "@/types/user";
 import { UserSwitcher } from "@/components/UserSwitcher";
 import { PlusCircle, Settings } from "lucide-react-native";
+import { getTranslation } from "@/constants/localization";
+import { useSettingsStore } from "@/store/settings-store";
+import { Platform } from "react-native";
 
 export default function FamilyScreen() {
-  const { currentUser, family } = useUserStore();
-  const [rules, setRules] = useState<FamilyRule[]>(family?.rules || []);
+  const { currentUser, family, addFamilyRule, updateFamilyRule } = useUserStore();
+  const { language } = useSettingsStore();
+  const t = (key: string) => getTranslation(key, language);
+  
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingRule, setEditingRule] = useState<FamilyRule | null>(null);
   
   if (!currentUser || !family) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <Text>{t('loading')}</Text>
       </View>
     );
   }
 
   const isParent = currentUser.role === 'parent';
   
-  const handleToggleRule = (ruleId: string, isActive: boolean) => {
-    if (!isParent) return; // Only parents can toggle rules
-    
-    setRules(prevRules => 
-      prevRules.map(rule => 
-        rule.id === ruleId ? { ...rule, isActive } : rule
-      )
-    );
+  const handleAddRule = () => {
+    setEditingRule(null);
+    setModalVisible(true);
+  };
+  
+  const handleEditRule = (rule: FamilyRule) => {
+    setEditingRule(rule);
+    setModalVisible(true);
+  };
+  
+  const handleSubmitRule = (ruleData: Omit<FamilyRule, 'id'>) => {
+    if (editingRule) {
+      updateFamilyRule(editingRule.id, ruleData);
+    } else {
+      addFamilyRule(ruleData);
+    }
+    setModalVisible(false);
   };
   
   return (
     <SafeAreaView style={styles.container} edges={['right', 'left']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Family</Text>
+          <Text style={styles.title}>{t('family')}</Text>
           
           {isParent && (
             <TouchableOpacity style={styles.settingsButton}>
@@ -58,7 +75,7 @@ export default function FamilyScreen() {
                 />
                 <Text style={styles.memberName}>{member.name}</Text>
                 <View style={styles.roleBadge}>
-                  <Text style={styles.roleText}>{member.role}</Text>
+                  <Text style={styles.roleText}>{t(member.role)}</Text>
                 </View>
               </View>
             ))}
@@ -68,24 +85,58 @@ export default function FamilyScreen() {
         <UserSwitcher />
         
         <View style={styles.rulesHeader}>
-          <Text style={styles.sectionTitle}>Family Rules</Text>
+          <Text style={styles.sectionTitle}>{t('familyRules')}</Text>
           
           {isParent && (
-            <TouchableOpacity style={styles.addRuleButton}>
+            <TouchableOpacity 
+              style={styles.addRuleButton}
+              onPress={handleAddRule}
+            >
               <PlusCircle size={20} color={colors.primary} />
-              <Text style={styles.addRuleText}>Add Rule</Text>
+              <Text style={styles.addRuleText}>{t('addRule')}</Text>
             </TouchableOpacity>
           )}
         </View>
         
-        {rules.map(rule => (
-          <FamilyRuleCard 
-            key={rule.id} 
-            rule={rule} 
-            onToggle={handleToggleRule} 
-          />
-        ))}
+        {family.rules.length > 0 ? (
+          family.rules.map(rule => (
+            <FamilyRuleCard 
+              key={rule.id} 
+              rule={rule} 
+              onEdit={handleEditRule} 
+            />
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>{t('noRulesYet')}</Text>
+            {isParent && (
+              <TouchableOpacity 
+                style={styles.emptyStateButton}
+                onPress={handleAddRule}
+              >
+                <Text style={styles.emptyStateButtonText}>{t('addFirstRule')}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </ScrollView>
+      
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <FamilyRuleForm 
+              rule={editingRule || undefined}
+              onSubmit={handleSubmitRule}
+              onCancel={() => setModalVisible(false)}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -187,5 +238,44 @@ const styles = StyleSheet.create({
     fontSize: fonts.sizes.sm,
     color: colors.primary,
     fontWeight: fonts.weights.medium,
+  },
+  emptyState: {
+    backgroundColor: colors.background,
+    borderRadius: layout.borderRadius.lg,
+    padding: layout.spacing.xl,
+    alignItems: 'center',
+    marginBottom: layout.spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+  },
+  emptyStateText: {
+    fontSize: fonts.sizes.md,
+    color: colors.textLight,
+    marginBottom: layout.spacing.md,
+    textAlign: 'center',
+  },
+  emptyStateButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: layout.spacing.sm,
+    paddingHorizontal: layout.spacing.md,
+    borderRadius: layout.borderRadius.md,
+  },
+  emptyStateButtonText: {
+    color: 'white',
+    fontWeight: fonts.weights.medium,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Полупрозрачный фон
+    justifyContent: 'flex-end', // Размещение модального окна внизу экрана
+  },
+  modalContent: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: layout.borderRadius.lg,
+    borderTopRightRadius: layout.borderRadius.lg,
+    paddingTop: layout.spacing.md,
+    paddingBottom: Platform.OS === 'ios' ? 40 : layout.spacing.md,
+    maxHeight: '80%', // Ограничение высоты модального окна
   },
 });

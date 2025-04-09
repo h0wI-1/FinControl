@@ -5,6 +5,8 @@ import { colors } from '@/constants/colors';
 import { layout } from '@/constants/layout';
 import { fonts } from '@/constants/fonts';
 import { formatCurrency, formatDate } from '@/utils/formatters';
+import { useSettingsStore } from '@/store/settings-store';
+import { getTranslation } from '@/constants/localization';
 import { Target, Calendar, Check } from 'lucide-react-native';
 
 interface SavingsGoalCardProps {
@@ -14,6 +16,9 @@ interface SavingsGoalCardProps {
 }
 
 export const SavingsGoalCard = ({ goal, onPress, onAddFunds }: SavingsGoalCardProps) => {
+  const { currency, language } = useSettingsStore();
+  const t = (key: string) => getTranslation(key, language);
+  
   const progress = (goal.currentAmount / goal.targetAmount) * 100;
   const formattedProgress = Math.min(Math.round(progress), 100);
   
@@ -32,17 +37,17 @@ export const SavingsGoalCard = ({ goal, onPress, onAddFunds }: SavingsGoalCardPr
         {goal.isCompleted && (
           <View style={styles.completedBadge}>
             <Check size={14} color="white" />
-            <Text style={styles.completedText}>Completed</Text>
+            <Text style={styles.completedText}>{t('completed')}</Text>
           </View>
         )}
       </View>
       
       <View style={styles.amountsContainer}>
         <Text style={styles.currentAmount}>
-          {formatCurrency(goal.currentAmount)}
+          {formatCurrency(goal.currentAmount, currency)}
         </Text>
         <Text style={styles.targetAmount}>
-          of {formatCurrency(goal.targetAmount)}
+          of {formatCurrency(goal.targetAmount, currency)}
         </Text>
       </View>
       
@@ -63,7 +68,7 @@ export const SavingsGoalCard = ({ goal, onPress, onAddFunds }: SavingsGoalCardPr
         <View style={styles.deadlineContainer}>
           <Calendar size={14} color={colors.textLight} />
           <Text style={styles.deadlineText}>
-            Target date: {formatDate(goal.deadline)}
+            {t('targetDate')}: {formatDate(goal.deadline, language === 'ru' ? 'ru-RU' : 'en-US')}
           </Text>
         </View>
       )}
@@ -73,7 +78,7 @@ export const SavingsGoalCard = ({ goal, onPress, onAddFunds }: SavingsGoalCardPr
           style={styles.addFundsButton}
           onPress={onAddFunds}
         >
-          <Text style={styles.addFundsText}>Add Funds</Text>
+          <Text style={styles.addFundsText}>{t('addFunds')}</Text>
         </TouchableOpacity>
       )}
     </TouchableOpacity>

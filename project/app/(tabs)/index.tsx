@@ -3,6 +3,8 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserStore } from "@/store/user-store";
 import { useFinanceStore } from "@/store/finance-store";
+import { useSettingsStore } from "@/store/settings-store";
+import { getTranslation } from "@/constants/localization";
 import { colors } from "@/constants/colors";
 import { layout } from "@/constants/layout";
 import { fonts } from "@/constants/fonts";
@@ -13,7 +15,8 @@ import { SavingsGoalCard } from "@/components/SavingsGoalCard";
 import { SpendingChart } from "@/components/SpendingChart";
 import { formatCurrency } from "@/utils/formatters";
 import { useRouter } from "expo-router";
-import { PlusCircle, ArrowRight, Bell } from "lucide-react-native";
+import { PlusCircle, ArrowRight, Bell, Target } from "lucide-react-native";
+import { CategoryType } from "@/types/finance";
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -24,6 +27,9 @@ export default function DashboardScreen() {
     getSavingsGoalsByUser,
     getTransactionsByUser
   } = useFinanceStore();
+  const { currency, language } = useSettingsStore();
+  
+  const t = (key: string) => getTranslation(key, language);
 
   // Auto-login for demo purposes
   useEffect(() => {
@@ -35,7 +41,7 @@ export default function DashboardScreen() {
   if (!currentUser || !family) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <Text>{t('loading')}</Text>
       </View>
     );
   }
@@ -49,8 +55,22 @@ export default function DashboardScreen() {
   const userTransactions = getTransactionsByUser(currentUser.id);
   
   // Get spending stats
+  const defaultCategorySpending: Record<CategoryType, number> = {
+    food: 0,
+    entertainment: 0,
+    education: 0,
+    clothing: 0,
+    savings: 0,
+    other: 0
+  };
+  
   const spendingStats = isParent 
-    ? { totalSpent: 0, totalReceived: 0, byCategorySpending: {}, savingsPercentage: 0 } 
+    ? { 
+        totalSpent: 0, 
+        totalReceived: 0, 
+        byCategorySpending: defaultCategorySpending, 
+        savingsPercentage: 0 
+      } 
     : mockSpendingStats[currentUser.id];
 
   return (
@@ -58,7 +78,7 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hello,</Text>
+            <Text style={styles.greeting}>{t('hello')}</Text>
             <Text style={styles.userName}>{currentUser.name}</Text>
           </View>
           <TouchableOpacity>
@@ -75,12 +95,12 @@ export default function DashboardScreen() {
           // Parent Dashboard
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Pending Requests</Text>
+              <Text style={styles.sectionTitle}>{t('pendingRequests')}</Text>
               <TouchableOpacity 
                 style={styles.seeAllButton}
                 onPress={() => router.push('/requests')}
               >
-                <Text style={styles.seeAllText}>See All</Text>
+                <Text style={styles.seeAllText}>{t('seeAll')}</Text>
                 <ArrowRight size={16} color={colors.primary} />
               </TouchableOpacity>
             </View>
@@ -96,17 +116,17 @@ export default function DashboardScreen() {
             ) : (
               <View style={styles.emptyState}>
                 <Bell size={40} color={colors.textLight} />
-                <Text style={styles.emptyStateText}>No pending requests</Text>
+                <Text style={styles.emptyStateText}>{t('noPendingRequests')}</Text>
               </View>
             )}
             
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Family Rules</Text>
+              <Text style={styles.sectionTitle}>{t('familyRules')}</Text>
               <TouchableOpacity 
                 style={styles.seeAllButton}
                 onPress={() => router.push('/family')}
               >
-                <Text style={styles.seeAllText}>Manage</Text>
+                <Text style={styles.seeAllText}>{t('manage')}</Text>
                 <ArrowRight size={16} color={colors.primary} />
               </TouchableOpacity>
             </View>
@@ -126,9 +146,9 @@ export default function DashboardScreen() {
           // Child Dashboard
           <>
             <View style={styles.balanceCard}>
-              <Text style={styles.balanceLabel}>Your Balance</Text>
+              <Text style={styles.balanceLabel}>{t('yourBalance')}</Text>
               <Text style={styles.balanceAmount}>
-                {formatCurrency(spendingStats.totalReceived - spendingStats.totalSpent)}
+                {formatCurrency(spendingStats.totalReceived - spendingStats.totalSpent, currency)}
               </Text>
               <View style={styles.balanceActions}>
                 <TouchableOpacity 
@@ -136,7 +156,7 @@ export default function DashboardScreen() {
                   onPress={() => router.push('/requests/new')}
                 >
                   <PlusCircle size={16} color="white" />
-                  <Text style={styles.balanceActionText}>Request Money</Text>
+                  <Text style={styles.balanceActionText}>{t('requestMoney')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -144,12 +164,12 @@ export default function DashboardScreen() {
             <SpendingChart stats={spendingStats} />
             
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Your Requests</Text>
+              <Text style={styles.sectionTitle}>{t('yourRequests')}</Text>
               <TouchableOpacity 
                 style={styles.seeAllButton}
                 onPress={() => router.push('/requests')}
               >
-                <Text style={styles.seeAllText}>See All</Text>
+                <Text style={styles.seeAllText}>{t('seeAll')}</Text>
                 <ArrowRight size={16} color={colors.primary} />
               </TouchableOpacity>
             </View>
@@ -165,23 +185,23 @@ export default function DashboardScreen() {
             ) : (
               <View style={styles.emptyState}>
                 <Bell size={40} color={colors.textLight} />
-                <Text style={styles.emptyStateText}>No requests yet</Text>
+                <Text style={styles.emptyStateText}>{t('noRequestsYet')}</Text>
                 <TouchableOpacity 
                   style={styles.emptyStateButton}
                   onPress={() => router.push('/requests/new')}
                 >
-                  <Text style={styles.emptyStateButtonText}>Create Request</Text>
+                  <Text style={styles.emptyStateButtonText}>{t('createRequest')}</Text>
                 </TouchableOpacity>
               </View>
             )}
             
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Savings Goals</Text>
+              <Text style={styles.sectionTitle}>{t('savingsGoals')}</Text>
               <TouchableOpacity 
                 style={styles.seeAllButton}
                 onPress={() => router.push('/goals')}
               >
-                <Text style={styles.seeAllText}>See All</Text>
+                <Text style={styles.seeAllText}>{t('seeAll')}</Text>
                 <ArrowRight size={16} color={colors.primary} />
               </TouchableOpacity>
             </View>
@@ -198,12 +218,12 @@ export default function DashboardScreen() {
             ) : (
               <View style={styles.emptyState}>
                 <Target size={40} color={colors.textLight} />
-                <Text style={styles.emptyStateText}>No savings goals yet</Text>
+                <Text style={styles.emptyStateText}>{t('noSavingsGoals')}</Text>
                 <TouchableOpacity 
                   style={styles.emptyStateButton}
                   onPress={() => router.push('/goals/new')}
                 >
-                  <Text style={styles.emptyStateButtonText}>Create Goal</Text>
+                  <Text style={styles.emptyStateButtonText}>{t('createGoal')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -311,24 +331,25 @@ const styles = StyleSheet.create({
     fontSize: fonts.sizes.xxxl,
     fontWeight: fonts.weights.bold,
     color: 'white',
-    marginBottom: layout.spacing.md,
+    marginBottom: layout.spacing.sm,
   },
   balanceActions: {
     flexDirection: 'row',
-    gap: layout.spacing.md,
+    justifyContent: 'flex-end',
   },
   balanceActionButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: layout.spacing.sm,
-    paddingHorizontal: layout.spacing.md,
-    borderRadius: layout.borderRadius.md,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: layout.spacing.xs,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: layout.spacing.xs,
+    paddingHorizontal: layout.spacing.sm,
+    borderRadius: layout.borderRadius.md,
+    gap: 4,
   },
   balanceActionText: {
     color: 'white',
     fontWeight: fonts.weights.medium,
+    fontSize: fonts.sizes.sm,
   },
   rulesPreview: {
     backgroundColor: colors.background,
@@ -341,23 +362,21 @@ const styles = StyleSheet.create({
   ruleItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: layout.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    marginBottom: layout.spacing.sm,
   },
   ruleNumberContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: layout.spacing.md,
+    marginRight: layout.spacing.sm,
   },
   ruleNumber: {
     color: 'white',
-    fontWeight: fonts.weights.bold,
     fontSize: fonts.sizes.sm,
+    fontWeight: fonts.weights.bold,
   },
   ruleTitle: {
     fontSize: fonts.sizes.md,
