@@ -14,13 +14,13 @@ export interface CurrencyInfo {
 export const CURRENCIES: Record<Currency, CurrencyInfo> = {
   USD: { code: 'USD', symbol: '$', name: 'US Dollar' },
   EUR: { code: 'EUR', symbol: '€', name: 'Euro' },
-  RUB: { code: 'RUB', symbol: '₽', name: 'Russian Ruble' },
+  RUB: { code: 'RUB', symbol: '₽', name: 'Рубли' },
   GBP: { code: 'GBP', symbol: '£', name: 'British Pound' },
 };
 
 export const LANGUAGES = {
   en: { code: 'en', name: 'English' },
-  ru: { code: 'ru', name: 'Russian' },
+  ru: { code: 'ru', name: 'Русский' },
 };
 
 interface SettingsState {
@@ -35,8 +35,8 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      currency: 'USD',
-      language: 'en',
+      currency: 'RUB',
+      language: 'ru',
       
       setCurrency: (currency: Currency) => set({ currency }),
       setLanguage: (language: Language) => set({ language }),

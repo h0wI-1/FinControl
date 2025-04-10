@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Modal } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Modal, TouchableWithoutFeedback } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserStore } from "@/store/user-store";
 import { colors } from "@/constants/colors";
@@ -127,15 +127,19 @@ export default function FamilyScreen() {
         transparent={true}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <FamilyRuleForm 
-              rule={editingRule || undefined}
-              onSubmit={handleSubmitRule}
-              onCancel={() => setModalVisible(false)}
-            />
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.modalContent}>
+                <FamilyRuleForm 
+                  rule={editingRule || undefined}
+                  onSubmit={handleSubmitRule}
+                  onCancel={() => setModalVisible(false)}
+                />
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
   );
@@ -276,6 +280,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: layout.borderRadius.lg,
     paddingTop: layout.spacing.md,
     paddingBottom: Platform.OS === 'ios' ? 40 : layout.spacing.md,
-    maxHeight: '80%', // Ограничение высоты модального окна
+    height: '80%', // Ограничение высоты модального окна
   },
 });

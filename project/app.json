@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "expo-app",
+    "name": "FinControl",
     "slug": "expo-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,6 +8,7 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "jsEngine": "hermes",
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -21,7 +22,9 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.fincontrol.expo"
+      "package": "com.fincontrol.expo",
+      "enableProguardInReleaseBuilds": true,
+      "enableShrinkResourcesInReleaseBuilds": true
     },
     "plugins": [
       "expo-router"
